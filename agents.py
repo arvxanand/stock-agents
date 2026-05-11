@@ -1,6 +1,4 @@
-import tumeryk_guardrails
-
-def stock_collector(user_query):
+def stock_collector(client, user_query):
     ''' Agent that collects only a list of stocks and returns them back to the user '''
     prompt = f"""Instructions: You are a stock ticker identification agent. Respond with ONLY a list of stock tickers and company names, 
     one per line, in the format TICKER - Company Name. Return exactly 5 tickers. No analysis, no disclaimers, no markdown formatting, no explanations, no links. 
@@ -17,14 +15,14 @@ User request: {user_query}"""
         {"role": "user", "content": prompt}
     ]
 
-    response = tumeryk_guardrails.tumeryk_completions(messages)
+    response = client.tumeryk_completions(messages)
 
     tickers = response["messages"][0]["content"]
     metrics1 = response["metrics"]
 
     return tickers, metrics1
 
-def research_analyst(tickers):
+def research_analyst(client, tickers):
     ''' Agent that takes the list of stocks and provides a brief analysis on those individual stocks '''
     prompt = f"""Instructions: You are a financial research analyst. You will receive a list of stock tickers. For each ticker, provide a brief analysis covering:
 1. What the company does (one sentence)
@@ -49,14 +47,14 @@ Tickers to analyze:
         {"role": "user", "content": prompt}
     ]
     
-    response = tumeryk_guardrails.tumeryk_completions(messages)
+    response = client.tumeryk_completions(messages)
 
     analysis = response["messages"][0]["content"]
     metrics2 = response["metrics"]
 
     return analysis, metrics2
 
-def decision_maker(analysis):
+def decision_maker(client, analysis):
     prompt = f"""Instructions: You are a senior investment strategist. You will receive research analysis on several stocks. For each stock, provide a trading recommendation.
 
 For each stock, include:
@@ -85,7 +83,7 @@ Analysis to evaluate:
         {"role": "user", "content": prompt}
     ]
     
-    response = tumeryk_guardrails.tumeryk_completions(messages)
+    response = client.tumeryk_completions(messages)
 
     recommendation = response["messages"][0]["content"]
     metrics3 = response["metrics"]
