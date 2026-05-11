@@ -1,18 +1,4 @@
-from dotenv import load_dotenv
-import os
 import tumeryk_guardrails
-
-load_dotenv()
-
-username = os.getenv("TUMERYK_USERNAME")
-password = os.getenv("TUMERYK_PASSWORD")
-
-if not username or not password:
-    raise ValueError("TUMERYK_USERNAME and TUMERYK_PASSWORD must be set in your environment variables.")
-
-tumeryk_guardrails.set_base_url("https://chat-azdev.tmryk.com")
-tumeryk_guardrails.login(username, password)
-tumeryk_guardrails.set_policy("EnterprisePolicy")
 
 def stock_collector(user_query):
     ''' Agent that collects only a list of stocks and returns them back to the user '''
@@ -105,26 +91,3 @@ Analysis to evaluate:
     metrics3 = response["metrics"]
 
     return recommendation, metrics3
-
-
-if __name__ == "__main__":
-    # Agent 1
-    tickers, metrics1 = stock_collector("find me major tech stocks")
-    print("=== Agent 1: Stock Collector ===")
-    print(tickers)
-    print("Trust Score:", metrics1["trust_score"])
-
-    print("\n")
-
-    # Agent 2
-    analysis, metrics2 = research_analyst(tickers)
-    print("=== Agent 2: Research Analyst ===")
-    print(analysis)
-    print("Trust Score:", metrics2["trust_score"])
-    print("\n")
-
-    # Agent 3
-    recommendation, metrics3 = decision_maker(analysis)
-    print("=== Agent 3: Decision Maker ===")
-    print(recommendation)
-    print("Trust Score:", metrics3["trust_score"])
