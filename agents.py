@@ -39,6 +39,7 @@ User request: {user_query}"""
     return tickers, metrics1
 
 def research_analyst(tickers):
+    ''' Agent that takes the list of stocks and provides a brief analysis on those individual stocks '''
     prompt = f"""Instructions: You are a financial research analyst. You will receive a list of stock tickers. For each ticker, provide a brief analysis covering:
 1. What the company does (one sentence)
 2. Recent financial performance (revenue trend, profitability)
