@@ -13,10 +13,10 @@ MSFT - Microsoft Corporation
 GOOGL - Alphabet Inc.""",
     )
 
-def create_research_analyst(mode_client):
+def create_research_analyst(model_client):
     return AssistantAgent(
-        name="reserach_analyst",
-        model_client=mode_client,
+        name="research_analyst",
+        model_client=model_client,
         system_message="""You are a financial research analyst. You will receive a list of stock tickers. For each ticker, provide a brief analysis covering:
 1. What the company does (one sentence)
 2. Recent financial performance (revenue trend, profitability)
