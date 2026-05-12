@@ -1,6 +1,8 @@
 from autogen_ext.models.openai import OpenAIChatCompletionClient
-from autogen_core.models import UserMessage, SystemMessage
+from autogen_core.models import UserMessage, SystemMessage, RequestUsage, CreateResult
 from autogen_core.models import ChatCompletionClient
+import requests
+import json
 
 class TumerykModelClient(ChatCompletionClient):
     """
@@ -17,6 +19,11 @@ class TumerykModelClient(ChatCompletionClient):
 
     def __init__(self, **kwargs):
         self._client = OpenAIChatCompletionClient(**kwargs)
+        self._api_key = kwargs.get("api_key", "")
+        self._model = kwargs.get("model", "")
+        self._base_url = kwargs.get("base_url", "")
+        self.last_metrics = None
+        self.all_metrics = []
     
     def _fix_messages(self, messages):
         """
@@ -45,8 +52,54 @@ class TumerykModelClient(ChatCompletionClient):
     
     async def create(self, messages, **kwargs):
         fixed = self._fix_messages(messages)
-        return await self._client.create(fixed, **kwargs)
+        
+        # Build the message list as plain dicts (what the API expects)
+        raw_messages = []
+        for msg in fixed:
+            if isinstance(msg, UserMessage):
+                raw_messages.append({"role": "user", "content": msg.content})
+            elif isinstance(msg, SystemMessage):
+                raw_messages.append({"role": "system", "content": msg.content})
+            else:
+                raw_messages.append({"role": "user", "content": str(msg.content)})
 
+        # Make the raw HTTP request (same as test_raw_api.py)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self._api_key}"
+        }
+        payload = {
+            "model": self._model,
+            "messages": raw_messages,
+        }
+
+        response = requests.post(
+            f"{self._base_url}/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
+        data = response.json()
+
+        # Save the metrics before they get lost
+        self.last_metrics = data.get("metrics", None)
+        self.all_metrics.append(data.get("metrics", None))
+
+
+        # Build the CreateResult that AutoGen expects
+        content = data["choices"][0]["message"]["content"]
+        usage = RequestUsage(
+            prompt_tokens=data.get("usage", {}).get("prompt_tokens", 0),
+            completion_tokens=data.get("usage", {}).get("completion_tokens", 0),
+        )
+
+        return CreateResult(
+            content=content,
+            finish_reason="stop",
+            usage=usage,
+            cached=False,
+        )
+    
     def create_stream(self, messages, **kwargs):
         fixed = self._fix_messages(messages)
         return self._client.create_stream(fixed, **kwargs)
